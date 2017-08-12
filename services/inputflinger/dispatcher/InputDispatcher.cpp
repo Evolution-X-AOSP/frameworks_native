@@ -2857,6 +2857,7 @@ void InputDispatcher::pokeUserActivityLocked(const EventEntry& eventEntry) {
     }
 
     int32_t eventType = USER_ACTIVITY_EVENT_OTHER;
+    int32_t keyCode = AKEYCODE_UNKNOWN;
     switch (eventEntry.type) {
         case EventEntry::Type::MOTION: {
             const MotionEntry& motionEntry = static_cast<const MotionEntry&>(eventEntry);
@@ -2875,6 +2876,7 @@ void InputDispatcher::pokeUserActivityLocked(const EventEntry& eventEntry) {
                 return;
             }
             eventType = USER_ACTIVITY_EVENT_BUTTON;
+            keyCode = keyEntry.keyCode;
             break;
         }
         default: {
@@ -2884,10 +2886,10 @@ void InputDispatcher::pokeUserActivityLocked(const EventEntry& eventEntry) {
         }
     }
 
-    auto command = [this, eventTime = eventEntry.eventTime, eventType, displayId]()
+    auto command = [this, eventTime = eventEntry.eventTime, eventType, displayId, keyCode]()
                            REQUIRES(mLock) {
                                scoped_unlock unlock(mLock);
-                               mPolicy->pokeUserActivity(eventTime, eventType, displayId);
+                               mPolicy->pokeUserActivity(eventTime, eventType, displayId, keyCode);
                            };
     postCommandLocked(std::move(command));
 }
