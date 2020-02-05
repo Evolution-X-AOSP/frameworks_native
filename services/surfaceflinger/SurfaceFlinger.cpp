@@ -412,6 +412,13 @@ void SurfaceFlinger::onFirstRef()
 
 SurfaceFlinger::~SurfaceFlinger() = default;
 
+void SurfaceFlinger::setTranslate(int x, int y, const DisplayDeviceState& state){
+    for (const auto& [token, displayDevice] : mDisplays) {
+        displayDevice->setTranslate(x, y);
+        displayDevice->setProjection(state.orientation, state.viewport, state.frame);
+    }
+}
+
 void SurfaceFlinger::binderDied(const wp<IBinder>& /* who */)
 {
     // the window manager died on us. prepare its eulogy.
@@ -5546,7 +5553,7 @@ status_t SurfaceFlinger::onTransact(uint32_t code, const Parcel& data, Parcel* r
                 reply->writeBool(getHwComposer().isUsingVrComposer());
                 return NO_ERROR;
             }
-            // Set buffer size for SF tracing (value in KB)
+           // Set buffer size for SF tracing (value in KB)
             case 1029: {
                 n = data.readInt32();
                 if (n <= 0 || n > MAX_TRACING_MEMORY) {
@@ -5631,6 +5638,20 @@ status_t SurfaceFlinger::onTransact(uint32_t code, const Parcel& data, Parcel* r
                         return result;
                     }
                     mDebugDisplayConfigSetByBackdoor = true;
+                }
+                return NO_ERROR;
+            }
+            case 2020: {
+                int x = data.readInt32();
+                int y = data.readInt32();
+                ssize_t index = mCurrentState.displays.indexOfKey(getInternalDisplayTokenLocked());
+                if (index < 0) {
+                    ALOGE("ScreenStabilization: Invalid token %p", getInternalDisplayTokenLocked().get());
+                } else {
+                    const DisplayDeviceState& state = mCurrentState.displays.valueAt(index);
+                    setTranslate(x, y, state);
+                    invalidateHwcGeometry();
+                    repaintEverything();
                 }
                 return NO_ERROR;
             }
