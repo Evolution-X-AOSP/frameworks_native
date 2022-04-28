@@ -5448,6 +5448,10 @@ void SurfaceFlinger::onHandleDestroyed(BBinder* handle, sp<Layer>& layer, uint32
     }
 
     mTransactionHandler.onLayerDestroyed(layerId);
+    if (!layer) {
+      ALOGW("Attempted to destroy an invalid layer");
+      return;
+    }
 
     Mutex::Autolock lock(mStateLock);
     markLayerPendingRemovalLocked(layer);
