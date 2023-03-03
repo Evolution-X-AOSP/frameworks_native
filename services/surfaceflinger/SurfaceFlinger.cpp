@@ -5686,7 +5686,8 @@ status_t SurfaceFlinger::doDump(int fd, const DumpArgs& args, bool asProto) {
         // Otherwise, SortedVector may have shared ownership during concurrent
         // traversals, which can result in use-after-frees.
         std::string compositionLayers;
-        mScheduler
+        if (flag.size() == 0 && !asProto) {
+            mScheduler
                 ->schedule([&] {
                     StringAppendF(&compositionLayers, "Composition layers\n");
                     mDrawingState.traverseInZOrder([&](Layer* layer) {
@@ -5700,6 +5701,7 @@ status_t SurfaceFlinger::doDump(int fd, const DumpArgs& args, bool asProto) {
                     });
                 })
                 .get();
+        }
 
         bool dumpLayers = true;
         {
