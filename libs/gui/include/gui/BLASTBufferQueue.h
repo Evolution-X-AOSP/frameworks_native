@@ -125,10 +125,6 @@ public:
      */
     void setTransactionHangCallback(std::function<void(bool)> callback);
 
-    // MIUI ADD:
-    bool adjustMaxDequeuedBufferCountForProducer(int);
-    // END
-
     virtual ~BLASTBufferQueue();
 
 private:
