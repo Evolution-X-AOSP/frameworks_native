@@ -455,17 +455,21 @@ void OutputLayer::writeOutputDependentGeometryStateToHWC(HWC2::Layer* hwcLayer,
               sourceCrop.bottom, to_string(error).c_str(), static_cast<int32_t>(error));
     }
 
-    uint32_t z_udfps = z;
     if ((strncmp(getLayerFE().getDebugName(), UDFPS_LAYER_NAME, strlen(UDFPS_LAYER_NAME)) == 0) ||
         (strncmp(getLayerFE().getDebugName(), UDFPS_BIOMETRIC_PROMPT_LAYER_NAME,
                  strlen(UDFPS_BIOMETRIC_PROMPT_LAYER_NAME)) == 0)) {
-        z_udfps = getUdfpsZOrder(z, false);
+        z = getUdfpsZOrder(z, false);
     } else if (strncmp(getLayerFE().getDebugName(), UDFPS_TOUCHED_LAYER_NAME,
                        strlen(UDFPS_TOUCHED_LAYER_NAME)) == 0) {
-        z_udfps = getUdfpsZOrder(z, true);
+        z = getUdfpsZOrder(z, true);
     }
 
-    if (auto error = hwcLayer->setZOrder(z_udfps); error != hal::Error::NONE) {
+    if (strstr(getLayerFE().getDebugName(), "NotificationShadeAOD")) {
+        ALOGV("[%s] AOD layer", getLayerFE().getDebugName());
+        z |= 0x4000000; // MI_FLINGER_LAYER_AOD_LAYER
+    }
+
+    if (auto error = hwcLayer->setZOrder(z); error != hal::Error::NONE) {
         ALOGE("[%s] Failed to set Z %u: %s (%d)", getLayerFE().getDebugName(), z,
               to_string(error).c_str(), static_cast<int32_t>(error));
     }
